@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Breach — Academic Resource Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <div class="scanline"></div>
+  <div class="noise"></div>
+
+  <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <span class="flash-icon">{% if category == 'success' %}✓{% elif category == 'error' %}✗{% else %}ℹ{% endif %}</span>
+          {{ message }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <section class="landing-hero">
+    <div class="hero-bg">
+      <div class="hero-grid"></div>
+      <div class="hero-orb-1"></div>
+      <div class="hero-orb-2"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge fade-up">
+        <span class="hero-badge-dot"></span>
+        YUGASTR 2026 · HACKATHON PROJECT
+      </div>
+      <h1 class="hero-title fade-up delay-1">
+        <span class="t1">NEURAL</span><br>
+        <span class="t2 glitch" data-text="BREACH">BREACH</span>
+      </h1>
+      <p class="hero-desc fade-up delay-2">
+        The decentralized academic resource network. Upload, discover, and share study materials, notes, and question papers across institutions.
+      </p>
+      <div class="hero-actions fade-up delay-3">
+        <a href="{{ url_for('register') }}" class="btn btn-primary">⬡ INITIALIZE ACCOUNT</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline">⌬ ACCESS SYSTEM</a>
+      </div>
+      <div class="hero-stats fade-up" style="animation-delay:0.5s">
+        <div class="hero-stat">
+          <span class="stat-num">∞</span>
+          <span class="stat-label">RESOURCES</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-num">⬡</span>
+          <span class="stat-label">INSTITUTIONS</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-num">🔒</span>
+          <span class="stat-label">SECURE ACCESS</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-num">★</span>
+          <span class="stat-label">PEER REVIEWED</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-brand">⬡ NEURAL BREACH</span>
+      <span class="footer-text">Yugastr 2026 · Academic Resource Network</span>
+      <span class="footer-status"><span class="status-dot"></span> SYSTEM ONLINE</span>
+    </div>
+  </footer>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

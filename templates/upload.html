@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Upload — Neural Breach{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container" style="padding:0">
+    <h1 class="fade-up">UPLOAD <span>RESOURCE</span></h1>
+    <p class="page-subtitle fade-up delay-1">Share your knowledge with the network</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="form-container" style="max-width:760px; padding:0; margin:0 auto 3rem;">
+    <form method="POST" enctype="multipart/form-data">
+
+      <!-- File Upload -->
+      <div class="card" style="padding:1.75rem; margin-bottom:1.25rem;" class="fade-up">
+        <h3 style="font-family:var(--font-display); font-size:0.85rem; letter-spacing:0.1em; color:var(--text-mid); margin-bottom:1.25rem;">// FILE</h3>
+        <div class="file-drop" id="fileDrop">
+          <input type="file" name="file" id="fileInput" accept=".pdf,.docx,.doc,.ppt,.pptx,.png,.jpg,.jpeg,.txt,.zip" required>
+          <div class="file-drop-icon">⬆</div>
+          <div class="file-drop-text">Drop file here or click to browse</div>
+          <div class="file-drop-hint">PDF, DOCX, PPT, Images, ZIP — Max 50MB</div>
+          <div class="file-selected-name" id="selectedFileName" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Resource Info -->
+      <div class="card" style="padding:1.75rem; margin-bottom:1.25rem;" class="fade-up delay-1">
+        <h3 style="font-family:var(--font-display); font-size:0.85rem; letter-spacing:0.1em; color:var(--text-mid); margin-bottom:1.25rem;">// RESOURCE INFORMATION</h3>
+        <div class="form-group">
+          <label for="title">RESOURCE TITLE <span class="req">*</span></label>
+          <input type="text" id="title" name="title" placeholder="e.g. Data Structures Complete Notes" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="subject">SUBJECT / COURSE <span class="req">*</span></label>
+            <input type="text" id="subject" name="subject" placeholder="e.g. Data Structures & Algorithms">
+          </div>
+          <div class="form-group">
+            <label for="resource_type">RESOURCE TYPE <span class="req">*</span></label>
+            <select id="resource_type" name="resource_type" required>
+              <option value="">Select type</option>
+              <option value="Notes">Notes</option>
+              <option value="Question Papers">Question Papers</option>
+              <option value="Solutions">Solutions</option>
+              <option value="Project Reports">Project Reports</option>
+              <option value="Study Material">Study Material</option>
+              <option value="Lab Manual">Lab Manual</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="semester">SEMESTER <span class="req">*</span></label>
+            <select id="semester" name="semester" required>
+              <option value="">Select</option>
+              {% for i in range(1, 9) %}
+              <option value="{{ i }}">Semester {{ i }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="year_batch">YEAR / BATCH <span class="req">*</span></label>
+            <input type="text" id="year_batch" name="year_batch" placeholder="e.g. 2024-25, 2023">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="description">DESCRIPTION <span style="color:var(--text-dim)">(optional)</span></label>
+          <textarea id="description" name="description" placeholder="Brief description of this resource..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="tags">TAGS / KEYWORDS <span style="color:var(--text-dim)">(optional)</span></label>
+          <input type="text" id="tags" name="tags" placeholder="e.g. arrays, sorting, bst, mid-term">
+          <div class="form-hint">Comma-separated keywords to make your resource discoverable</div>
+        </div>
+      </div>
+
+      <!-- Privacy -->
+      <div class="card" style="padding:1.75rem; margin-bottom:1.25rem;" class="fade-up delay-2">
+        <h3 style="font-family:var(--font-display); font-size:0.85rem; letter-spacing:0.1em; color:var(--text-mid); margin-bottom:1.25rem;">// ACCESS CONTROL</h3>
+        <div class="privacy-options">
+          <div class="privacy-option">
+            <input type="radio" name="privacy" id="priv_public" value="public" checked>
+            <label class="privacy-label" for="priv_public">
+              <span class="p-icon">🌐</span>
+              <span class="p-name">PUBLIC</span>
+              <span class="p-desc">Anyone from any college can access this</span>
+            </label>
+          </div>
+          <div class="privacy-option">
+            <input type="radio" name="privacy" id="priv_private" value="private">
+            <label class="privacy-label" for="priv_private">
+              <span class="p-icon">🔒</span>
+              <span class="p-name">PRIVATE</span>
+              <span class="p-desc">Only {{ user.college }} students can access</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="fade-up delay-3" style="display:flex; gap:1rem;">
+        <button type="submit" class="btn btn-primary">⬆ UPLOAD RESOURCE</button>
+        <a href="{{ url_for('home') }}" class="btn btn-outline">✕ CANCEL</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const fileDrop = document.getElementById('fileDrop');
+const fileInput = document.getElementById('fileInput');
+const selectedName = document.getElementById('selectedFileName');
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) {
+    fileDrop.classList.add('file-selected');
+    selectedName.style.display = 'block';
+    selectedName.textContent = '✓ ' + fileInput.files[0].name;
+  }
+});
+
+['dragover','dragenter'].forEach(e => fileDrop.addEventListener(e, ev => {
+  ev.preventDefault(); fileDrop.classList.add('drag-over');
+}));
+['dragleave','drop'].forEach(e => fileDrop.addEventListener(e, ev => {
+  fileDrop.classList.remove('drag-over');
+}));
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Profile — Neural Breach{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container" style="padding:0">
+    <h1 class="fade-up">MY <span>PROFILE</span></h1>
+    <p class="page-subtitle fade-up delay-1">Your Neural Breach dashboard</p>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom:3rem">
+
+  <!-- Profile Header -->
+  <div class="card profile-header fade-up" style="margin-bottom:1.5rem;">
+    <div class="profile-avatar">{{ user.name[0].upper() }}</div>
+    <div>
+      <h2>{{ user.name }}</h2>
+      <div class="profile-college">⬡ {{ user.college }}</div>
+      {% if user.bio %}
+      <p class="profile-bio">{{ user.bio }}</p>
+      {% endif %}
+      <div class="badge-list">
+        <span class="badge badge-branch">{{ user.branch }}</span>
+        <span class="badge badge-sem">SEM {{ user.semester }}</span>
+      </div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <span class="pstat-val">{{ resources|length }}</span>
+          <div class="pstat-label">UPLOADS</div>
+        </div>
+        <div class="profile-stat">
+          <span class="pstat-val">{{ total_downloads }}</span>
+          <div class="pstat-label">TOTAL DL</div>
+        </div>
+      </div>
+    </div>
+    <a href="{{ url_for('edit_profile') }}" class="btn btn-outline btn-sm" style="margin-left:auto; align-self:flex-start;">✎ EDIT PROFILE</a>
+  </div>
+
+  <!-- My Resources -->
+  <div class="section-header fade-up">
+    <span class="section-title">MY UPLOADS</span>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm">↑ NEW UPLOAD</a>
+  </div>
+
+  {% if resources %}
+  <div class="card fade-up delay-1" style="overflow:hidden;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>RESOURCE</th>
+          <th>SUBJECT</th>
+          <th>TYPE</th>
+          <th>PRIVACY</th>
+          <th>RATING</th>
+          <th>DOWNLOADS</th>
+          <th>UPLOADED</th>
+          <th>ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in resources %}
+        <tr>
+          <td>
+            <a href="{{ url_for('resource_detail', resource_id=res.id) }}" style="color:var(--text-bright); text-decoration:none; font-weight:600;">
+              {{ res.original_filename | file_icon }} {{ res.title[:30] }}{% if res.title|length > 30 %}…{% endif %}
+            </a>
+          </td>
+          <td style="color:var(--text-mid); font-size:0.85rem;">{{ res.subject[:20] }}</td>
+          <td><span class="tag tag-type" style="white-space:nowrap;">{{ res.resource_type }}</span></td>
+          <td>
+            {% if res.privacy == 'private' %}
+            <span class="tag tag-priv">🔒 PRIVATE</span>
+            {% else %}
+            <span class="tag tag-pub">🌐 PUBLIC</span>
+            {% endif %}
+          </td>
+          <td style="color:var(--gold);">
+            {{ '%.1f'|format(res.avg_rating or 0) }} ★
+            <span style="color:var(--text-dim); font-size:0.72rem;">({{ res.review_count }})</span>
+          </td>
+          <td style="font-family:var(--font-mono); font-size:0.85rem; color:var(--cyan);">{{ res.download_count }}</td>
+          <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-dim);">{{ res.created_at | timeago }}</td>
+          <td>
+            <div class="actions-cell">
+              <a href="{{ url_for('edit_resource', resource_id=res.id) }}" class="btn btn-outline btn-sm">✎</a>
+              <form method="POST" action="{{ url_for('delete_resource', resource_id=res.id) }}" onsubmit="return confirm('Delete this resource?')">
+                <button type="submit" class="btn btn-danger btn-sm">✕</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card no-results fade-up">
+    <span class="no-results-icon">⬡</span>
+    <p>You haven't uploaded any resources yet.</p>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary" style="margin-top:1rem;">↑ Upload Your First Resource</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

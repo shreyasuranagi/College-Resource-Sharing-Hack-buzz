@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Edit Resource — Neural Breach{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container" style="padding:0">
+    <h1 class="fade-up">EDIT <span>RESOURCE</span></h1>
+    <p class="page-subtitle">{{ resource.title }}</p>
+  </div>
+</div>
+<div class="container">
+  <div style="max-width:700px; margin:0 auto 3rem;">
+    <form method="POST">
+      <div class="card" style="padding:2rem; margin-bottom:1.25rem;" class="fade-up">
+        <h3 style="font-family:var(--font-display); font-size:0.85rem; letter-spacing:0.1em; color:var(--text-mid); margin-bottom:1.25rem;">// RESOURCE INFORMATION</h3>
+        <div class="form-group">
+          <label>RESOURCE TITLE <span class="req">*</span></label>
+          <input type="text" name="title" value="{{ resource.title }}" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>SUBJECT / COURSE <span class="req">*</span></label>
+            <input type="text" name="subject" value="{{ resource.subject }}">
+          </div>
+          <div class="form-group">
+            <label>RESOURCE TYPE <span class="req">*</span></label>
+            <select name="resource_type" required>
+              {% for t in ['Notes','Question Papers','Solutions','Project Reports','Study Material','Lab Manual','Other'] %}
+              <option value="{{ t }}" {% if resource.resource_type == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>SEMESTER <span class="req">*</span></label>
+            <select name="semester" required>
+              {% for i in range(1, 9) %}
+              <option value="{{ i }}" {% if resource.semester == i|string %}selected{% endif %}>Semester {{ i }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>YEAR / BATCH <span class="req">*</span></label>
+            <input type="text" name="year_batch" value="{{ resource.year_batch }}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>DESCRIPTION</label>
+          <textarea name="description" rows="3">{{ resource.description or '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label>TAGS / KEYWORDS</label>
+          <input type="text" name="tags" value="{{ resource.tags or '' }}" placeholder="Comma-separated keywords">
+        </div>
+      </div>
+
+      <div class="card" style="padding:1.75rem; margin-bottom:1.25rem;" class="fade-up delay-1">
+        <h3 style="font-family:var(--font-display); font-size:0.85rem; letter-spacing:0.1em; color:var(--text-mid); margin-bottom:1.25rem;">// ACCESS CONTROL</h3>
+        <div class="privacy-options">
+          <div class="privacy-option">
+            <input type="radio" name="privacy" id="priv_public" value="public" {% if resource.privacy == 'public' %}checked{% endif %}>
+            <label class="privacy-label" for="priv_public">
+              <span class="p-icon">🌐</span>
+              <span class="p-name">PUBLIC</span>
+              <span class="p-desc">Anyone can access</span>
+            </label>
+          </div>
+          <div class="privacy-option">
+            <input type="radio" name="privacy" id="priv_private" value="private" {% if resource.privacy == 'private' %}checked{% endif %}>
+            <label class="privacy-label" for="priv_private">
+              <span class="p-icon">🔒</span>
+              <span class="p-name">PRIVATE</span>
+              <span class="p-desc">Your college only</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem;" class="fade-up delay-2">
+        <button type="submit" class="btn btn-primary">✓ SAVE CHANGES</button>
+        <a href="{{ url_for('resource_detail', resource_id=resource.id) }}" class="btn btn-outline">✕ CANCEL</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

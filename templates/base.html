@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Neural Breach{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="scanline"></div>
+  <div class="noise"></div>
+
+  {% if session.user_id %}
+  <nav class="navbar">
+    <a href="{{ url_for('home') }}" class="nav-brand">
+      <span class="brand-icon">⬡</span>
+      <span class="brand-text">NEURAL<span class="brand-accent">BREACH</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+        <span class="nav-icon">⌂</span> HOME
+      </a>
+      <a href="{{ url_for('search') }}" class="nav-link {% if request.endpoint == 'search' %}active{% endif %}">
+        <span class="nav-icon">⌕</span> SEARCH
+      </a>
+      <a href="{{ url_for('upload') }}" class="nav-link nav-upload {% if request.endpoint == 'upload' %}active{% endif %}">
+        <span class="nav-icon">↑</span> UPLOAD
+      </a>
+      <a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">
+        <span class="nav-icon">◈</span> {{ session.user_name[:10] }}
+      </a>
+      <a href="{{ url_for('logout') }}" class="nav-link nav-logout">
+        <span class="nav-icon">⏻</span> EXIT
+      </a>
+    </div>
+    <button class="nav-hamburger" id="navToggle">☰</button>
+  </nav>
+  {% endif %}
+
+  <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <span class="flash-icon">{% if category == 'success' %}✓{% elif category == 'error' %}✗{% elif category == 'warning' %}⚠{% else %}ℹ{% endif %}</span>
+          {{ message }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-brand">⬡ NEURAL BREACH</span>
+      <span class="footer-text">Yugastr 2026 · Academic Resource Network</span>
+      <span class="footer-status"><span class="status-dot"></span> SYSTEM ONLINE</span>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

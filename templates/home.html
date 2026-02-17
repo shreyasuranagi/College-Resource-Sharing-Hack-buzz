@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Home — Neural Breach{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container" style="padding:0">
+    <h1 class="fade-up">WELCOME BACK, <span>{{ user.name.upper() }}</span></h1>
+    <p class="page-subtitle fade-up delay-1">⬡ {{ user.college }} · {{ user.branch }} · Semester {{ user.semester }}</p>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Stats Dashboard -->
+  <div class="dashboard-grid fade-up delay-1">
+    <div class="card stat-card">
+      <div class="stat-card-val">{{ public_count }}</div>
+      <div class="stat-card-label">PUBLIC RESOURCES</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-card-val">{{ user_uploads }}</div>
+      <div class="stat-card-label">YOUR UPLOADS</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-card-val" style="color:var(--magenta)">⬡</div>
+      <div class="stat-card-label">{{ user.college[:20] }}</div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div style="display:flex; gap:1rem; margin-bottom:2.5rem;" class="fade-up delay-2">
+    <a href="{{ url_for('upload') }}" class="btn btn-primary">↑ UPLOAD RESOURCE</a>
+    <a href="{{ url_for('search') }}" class="btn btn-outline">⌕ BROWSE ALL</a>
+    <a href="{{ url_for('profile') }}" class="btn btn-outline">◈ MY PROFILE</a>
+  </div>
+
+  <!-- Recent Resources -->
+  <div class="section-header fade-up">
+    <span class="section-title">RECENT RESOURCES</span>
+    <a href="{{ url_for('search') }}" class="btn btn-sm btn-outline">VIEW ALL →</a>
+  </div>
+
+  {% if resources %}
+  <div class="resource-grid fade-up delay-1">
+    {% for res in resources %}
+    <div class="card resource-card">
+      <a href="{{ url_for('resource_detail', resource_id=res.id) }}">
+        <div class="rc-header">
+          <span class="rc-icon">{{ res.original_filename | file_icon }}</span>
+          <div class="rc-info">
+            <div class="rc-title" title="{{ res.title }}">{{ res.title }}</div>
+            <div class="rc-subject">{{ res.subject }}</div>
+          </div>
+        </div>
+        <div class="rc-body">
+          <div class="rc-meta">
+            <span class="tag tag-type">{{ res.resource_type }}</span>
+            <span class="tag tag-sem">SEM {{ res.semester }}</span>
+            {% if res.privacy == 'private' %}
+            <span class="tag tag-priv">🔒 PRIVATE</span>
+            {% else %}
+            <span class="tag tag-pub">🌐 PUBLIC</span>
+            {% endif %}
+          </div>
+          <div class="rc-uploader">↑ {{ res.uploader_name }} · {{ res.uploader_college[:20] }}</div>
+        </div>
+        <div class="rc-footer">
+          <div class="rc-rating">
+            <span class="stars">{% for i in range(5) %}{% if i < res.avg_rating|int %}★{% else %}☆{% endif %}{% endfor %}</span>
+            <span style="font-size:0.75rem; color:var(--text-dim)">{{ res.avg_rating }} ({{ res.review_count }})</span>
+          </div>
+          <div class="rc-stats">
+            <span>⬇ {{ res.download_count }}</span>
+            <span>⏱ {{ res.created_at | timeago }}</span>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card no-results fade-up">
+    <span class="no-results-icon">⬡</span>
+    <p>No resources yet. Be the first to upload!</p>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary" style="margin-top:1rem;">↑ Upload Now</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

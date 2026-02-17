@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+{% block title %}{{ resource.title }} — Neural Breach{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container" style="padding:0">
+    <a href="{{ url_for('search') }}" style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-mid); text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem; margin-bottom:0.75rem;">← BACK TO SEARCH</a>
+    <h1 class="fade-up" style="font-size:clamp(1.2rem,3vw,1.8rem)">{{ resource.title }}</h1>
+    <p class="page-subtitle fade-up delay-1">{{ resource.subject }} · {{ resource.resource_type }}</p>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom:3rem">
+  <div class="detail-layout">
+
+    <!-- Main Content -->
+    <div class="detail-main">
+
+      <!-- Resource Info Card -->
+      <div class="card detail-card fade-up">
+        <div class="detail-header">
+          <span class="detail-icon">{{ resource.original_filename | file_icon }}</span>
+          <div>
+            <h2 class="detail-title">{{ resource.title }}</h2>
+            <div class="detail-meta">
+              <span class="tag tag-type">{{ resource.resource_type }}</span>
+              <span class="tag tag-sem">SEM {{ resource.semester }}</span>
+              {% if resource.privacy == 'private' %}
+              <span class="tag tag-priv">🔒 PRIVATE — {{ resource.college }}</span>
+              {% else %}
+              <span class="tag tag-pub">🌐 PUBLIC</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if resource.description %}
+        <p class="detail-desc">{{ resource.description }}</p>
+        {% endif %}
+
+        {% if resource.tags %}
+        <div style="margin-bottom:1.25rem;">
+          <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-dim); letter-spacing:0.1em; margin-bottom:0.5rem;">TAGS</div>
+          <div class="detail-tags">
+            {% for tag in resource.tags.split(',') %}
+            {% if tag.strip() %}
+            <a href="{{ url_for('search', q=tag.strip()) }}" class="tag tag-keyword" style="text-decoration:none; cursor:pointer;">{{ tag.strip() }}</a>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">UPLOADED BY</div>
+            <div class="info-value">{{ resource.uploader_name }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">INSTITUTION</div>
+            <div class="info-value">{{ resource.uploader_college }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">BRANCH</div>
+            <div class="info-value">{{ resource.uploader_branch }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">YEAR / BATCH</div>
+            <div class="info-value">{{ resource.year_batch }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">FILE SIZE</div>
+            <div class="info-value">{{ resource.file_size | file_size_fmt }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">UPLOADED</div>
+            <div class="info-value">{{ resource.created_at | timeago }}</div>
+          </div>
+        </div>
+
+        <!-- View / Download / Bookmark Buttons -->
+        <div style="display:flex; gap:0.75rem; margin-top:1.5rem; flex-wrap:wrap; align-items:center;">
+          <button onclick="openPreview()" class="btn btn-primary" style="background:var(--cyan);color:var(--bg-deep);border-color:var(--cyan);">
+            👁 VIEW
+          </button>
+          <a href="{{ url_for('download_resource', resource_id=resource.id) }}" class="btn btn-outline">
+            ⬇ DOWNLOAD
+          </a>
+          <form method="POST" action="{{ url_for('toggle_bookmark', resource_id=resource.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-outline" style="{% if is_bookmarked %}background:rgba(0,255,200,0.15);border-color:var(--cyan);color:var(--cyan);{% endif %}">
+              {% if is_bookmarked %}🔖 BOOKMARKED{% else %}🔖 BOOKMARK{% endif %}
+            </button>
+          </form>
+          {% if resource.user_id == user.id %}
+          <a href="{{ url_for('edit_resource', resource_id=resource.id) }}" class="btn btn-outline btn-sm">✎ EDIT</a>
+          <form method="POST" action="{{ url_for('delete_resource', resource_id=resource.id) }}" style="display:inline" onsubmit="return confirm('Delete this resource? This cannot be undone.')">
+            <button type="submit" class="btn btn-danger btn-sm">✕ DELETE</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ── FILE PREVIEW MODAL ───────────────────────── -->
+      <div id="previewModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.85); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:1rem;">
+        <div style="background:var(--bg-card); border:1px solid var(--border-hot); border-radius:8px; width:100%; max-width:820px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 0 40px rgba(0,255,200,0.15);">
+
+          <!-- Modal Header -->
+          <div style="padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+              {% if resource.privacy == 'private' %}
+              <span style="background:rgba(255,45,120,0.15); color:var(--magenta); border:1px solid rgba(255,45,120,0.4); border-radius:4px; padding:0.2rem 0.6rem; font-size:0.72rem; font-family:var(--font-mono); letter-spacing:0.08em;">PRIVATE</span>
+              {% else %}
+              <span style="background:rgba(106,223,138,0.1); color:#6adf8a; border:1px solid rgba(106,223,138,0.3); border-radius:4px; padding:0.2rem 0.6rem; font-size:0.72rem; font-family:var(--font-mono); letter-spacing:0.08em;">PUBLIC</span>
+              {% endif %}
+              <span style="background:rgba(0,255,200,0.1); color:var(--cyan); border:1px solid rgba(0,255,200,0.3); border-radius:4px; padding:0.2rem 0.6rem; font-size:0.72rem; font-family:var(--font-mono); letter-spacing:0.08em;">{{ resource.resource_type | upper }}</span>
+            </div>
+            <button onclick="closePreview()" style="background:none; border:none; color:var(--text-mid); font-size:1.4rem; cursor:pointer; line-height:1; padding:0.2rem 0.4rem; border-radius:4px; transition:0.2s;" onmouseover="this.style.color='var(--magenta)'" onmouseout="this.style.color='var(--text-mid)'">✕</button>
+          </div>
+
+          <!-- Modal Title -->
+          <div style="padding:1rem 1.25rem 0.75rem; border-bottom:1px solid var(--border); flex-shrink:0;">
+            <h3 style="font-family:var(--font-display); font-size:1.1rem; color:var(--text-bright); margin-bottom:0.25rem;">{{ resource.title }}</h3>
+            <p style="font-family:var(--font-mono); font-size:0.78rem; color:var(--text-mid);">{{ resource.subject }} — Semester {{ resource.semester }} ({{ resource.year_batch }})</p>
+          </div>
+
+          <!-- Modal Action Buttons -->
+          <div style="padding:0.75rem 1.25rem; border-bottom:1px solid var(--border); display:flex; gap:0.75rem; flex-shrink:0;">
+            <button onclick="showPreviewTab('file')" id="tabFile" class="btn btn-primary btn-sm">👁 View</button>
+            <a href="{{ url_for('download_resource', resource_id=resource.id) }}" class="btn btn-outline btn-sm">⬇ Download</a>
+            <form method="POST" action="{{ url_for('toggle_bookmark', resource_id=resource.id) }}" style="display:inline;">
+              <button type="submit" class="btn btn-outline btn-sm" style="{% if is_bookmarked %}color:var(--cyan);border-color:var(--cyan);{% endif %}">
+                🔖 {% if is_bookmarked %}Bookmarked{% else %}Bookmark{% endif %}
+              </button>
+            </form>
+          </div>
+
+          <!-- Preview Tabs -->
+          <div style="display:flex; border-bottom:1px solid var(--border); flex-shrink:0;">
+            <button onclick="showPreviewTab('file')" id="tabBtnFile"
+              style="padding:0.6rem 1.25rem; background:none; border:none; border-bottom:2px solid var(--cyan); color:var(--cyan); font-family:var(--font-mono); font-size:0.78rem; cursor:pointer; letter-spacing:0.08em;">
+              FILE PREVIEW
+            </button>
+            <button onclick="showPreviewTab('reviews')" id="tabBtnReviews"
+              style="padding:0.6rem 1.25rem; background:none; border:none; border-bottom:2px solid transparent; color:var(--text-mid); font-family:var(--font-mono); font-size:0.78rem; cursor:pointer; letter-spacing:0.08em;">
+              REVIEWS ({{ review_count }})
+            </button>
+          </div>
+
+          <!-- File Preview Tab -->
+          <div id="previewTabFile" style="flex:1; overflow:auto; padding:1rem;">
+            {% set ext = resource.original_filename.rsplit('.', 1)[-1].lower() if '.' in resource.original_filename else '' %}
+            {% if ext == 'pdf' %}
+              <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--cyan); margin-bottom:0.75rem; letter-spacing:0.08em;">File Preview:</div>
+              <iframe
+                src="{{ url_for('preview_resource', resource_id=resource.id) }}"
+                style="width:100%; height:520px; border:1px solid var(--border); border-radius:4px; background:#fff;"
+                title="{{ resource.title }}">
+              </iframe>
+            {% elif ext in ['png', 'jpg', 'jpeg'] %}
+              <div style="text-align:center; padding:1rem;">
+                <img src="{{ url_for('preview_resource', resource_id=resource.id) }}"
+                     style="max-width:100%; max-height:500px; border-radius:4px; border:1px solid var(--border);"
+                     alt="{{ resource.title }}">
+              </div>
+            {% else %}
+              <div style="text-align:center; padding:3rem; color:var(--text-dim);">
+                <div style="font-size:3rem; margin-bottom:1rem;">{{ resource.original_filename | file_icon }}</div>
+                <div style="font-family:var(--font-mono); font-size:0.85rem; margin-bottom:0.5rem;">Preview not available for this file type</div>
+                <div style="font-size:0.8rem; color:var(--text-dim); margin-bottom:1.5rem;">{{ resource.original_filename }} · {{ resource.file_size | file_size_fmt }}</div>
+                <a href="{{ url_for('download_resource', resource_id=resource.id) }}" class="btn btn-primary btn-sm">⬇ Download to view</a>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Reviews Tab -->
+          <div id="previewTabReviews" style="display:none; flex:1; overflow:auto; padding:1.25rem;">
+            <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-dim); letter-spacing:0.08em; margin-bottom:1rem;">REVIEWS ({{ review_count }})</div>
+            {% if reviews %}
+              {% for review in reviews %}
+              <div style="padding:0.85rem 0; border-bottom:1px solid var(--border);">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.4rem;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--magenta));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.7rem;color:var(--bg-deep);font-weight:700;">{{ review.reviewer_name[0].upper() }}</div>
+                    <span style="font-weight:600; font-size:0.88rem;">{{ review.reviewer_name }}</span>
+                    <span style="color:var(--gold); font-size:0.82rem;">{% for i in range(review.rating) %}★{% endfor %}{% for i in range(5-review.rating) %}☆{% endfor %}</span>
+                  </div>
+                  <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-dim);">{{ review.created_at | timeago }}</span>
+                </div>
+                {% if review.comment %}<p style="font-size:0.88rem; color:var(--text-mid); padding-left:2.4rem;">{{ review.comment }}</p>{% endif %}
+              </div>
+              {% endfor %}
+            {% else %}
+              <div style="text-align:center; padding:2rem; color:var(--text-dim); font-family:var(--font-mono); font-size:0.82rem;">No reviews yet.</div>
+            {% endif %}
+
+            {% if resource.user_id != user.id %}
+            <div style="margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid var(--border);">
+              <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-dim); letter-spacing:0.08em; margin-bottom:1rem;">WRITE A REVIEW</div>
+              <form method="POST" action="{{ url_for('submit_review', resource_id=resource.id) }}">
+                <div style="margin-bottom:0.75rem;">
+                  <select name="rating" style="padding:0.5rem 0.75rem; background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:4px; color:var(--text-bright); font-family:var(--font-body); width:100%;">
+                    <option value="5">5 Stars - Excellent</option>
+                    <option value="4">4 Stars - Good</option>
+                    <option value="3">3 Stars - Average</option>
+                    <option value="2">2 Stars - Poor</option>
+                    <option value="1">1 Star - Very Poor</option>
+                  </select>
+                </div>
+                <div style="margin-bottom:0.75rem;">
+                  <textarea name="comment" rows="3" placeholder="Your thoughts..."
+                    style="width:100%; padding:0.65rem 0.9rem; background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:4px; color:var(--text-bright); font-family:var(--font-body); font-size:0.9rem; resize:vertical;">{{ user_review.comment if user_review else '' }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">
+                  {{ '✓ Update Review' if user_review else 'Submit Review' }}
+                </button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+      <!-- ── END PREVIEW MODAL ──────────────────────── -->
+      </div>
+
+      <!-- Reviews Section -->
+      <div class="card detail-card fade-up delay-1">
+        <div class="section-header" style="margin-bottom:1.5rem;">
+          <span class="section-title">REVIEWS</span>
+          <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-dim)">{{ review_count }} review{% if review_count != 1 %}s{% endif %}</span>
+        </div>
+
+        <!-- Submit/Edit Review Form -->
+        {% if resource.user_id != user.id %}
+        <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border);">
+          <h4 style="font-family:var(--font-display); font-size:0.8rem; letter-spacing:0.1em; color:var(--text-mid); margin-bottom:1rem;">
+            {{ '// UPDATE YOUR REVIEW' if user_review else '// LEAVE A REVIEW' }}
+          </h4>
+          <form method="POST" action="{{ url_for('submit_review', resource_id=resource.id) }}">
+            <div class="form-group">
+              <label>YOUR RATING <span class="req">*</span></label>
+              <div class="star-rating">
+                {% for i in [5,4,3,2,1] %}
+                <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}"
+                       {% if user_review and user_review.rating == i %}checked{% endif %}>
+                <label for="star{{ i }}" title="{{ i }} star{{ 's' if i != 1 }}">★</label>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="comment">YOUR REVIEW</label>
+              <textarea id="comment" name="comment" rows="3"
+                placeholder="Share your thoughts on this resource...">{{ user_review.comment if user_review else '' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">
+              {{ '✓ UPDATE REVIEW' if user_review else '★ SUBMIT REVIEW' }}
+            </button>
+          </form>
+        </div>
+        {% endif %}
+
+        <!-- Reviews List -->
+        {% if reviews %}
+        <div>
+          {% for review in reviews %}
+          <div class="review-item">
+            <div class="review-header">
+              <div style="display:flex; align-items:center; gap:0.75rem;">
+                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--magenta));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.75rem;color:var(--bg-deep);font-weight:700;flex-shrink:0;">
+                  {{ review.reviewer_name[0].upper() }}
+                </div>
+                <div>
+                  <div class="review-author">{{ review.reviewer_name }}</div>
+                  <div class="review-stars">{% for i in range(review.rating) %}★{% endfor %}{% for i in range(5 - review.rating) %}☆{% endfor %}</div>
+                </div>
+              </div>
+              <div class="review-date">{{ review.created_at | timeago }}</div>
+            </div>
+            {% if review.comment %}
+            <p class="review-text" style="margin-top:0.5rem; padding-left:2.75rem;">{{ review.comment }}</p>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:2rem; color:var(--text-dim); font-family:var(--font-mono); font-size:0.8rem;">
+          No reviews yet. Be the first to review!
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="detail-sidebar">
+      <!-- Rating Card -->
+      <div class="card fade-up">
+        <div class="rating-display">
+          <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-dim); letter-spacing:0.1em; margin-bottom:0.75rem;">AVERAGE RATING</div>
+          <div class="rating-big">{{ avg_rating }}</div>
+          <div class="rating-stars-big">
+            {% for i in range(5) %}{% if i < avg_rating|int %}★{% elif avg_rating - i > 0.5 %}½{% else %}☆{% endif %}{% endfor %}
+          </div>
+          <div class="rating-count">from {{ review_count }} review{% if review_count != 1 %}s{% endif %}</div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="card" style="padding:1.25rem; margin-top:1rem;" class="fade-up delay-1">
+        <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-dim); letter-spacing:0.1em; margin-bottom:1rem;">RESOURCE STATS</div>
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-mid)">DOWNLOADS</span>
+            <span style="font-family:var(--font-display); font-size:1rem; color:var(--cyan)">{{ resource.download_count }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-mid)">REVIEWS</span>
+            <span style="font-family:var(--font-display); font-size:1rem; color:var(--cyan)">{{ review_count }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-mid)">SEMESTER</span>
+            <span style="font-family:var(--font-display); font-size:1rem; color:var(--text-bright)">{{ resource.semester }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-mid)">ACCESS</span>
+            <span style="font-size:0.8rem; font-weight:600; color:{{ 'var(--magenta)' if resource.privacy == 'private' else '#6adf8a' }}">
+              {{ '🔒 PRIVATE' if resource.privacy == 'private' else '🌐 PUBLIC' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Related Search -->
+      <div class="card" style="padding:1.25rem; margin-top:1rem;" class="fade-up delay-2">
+        <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-dim); letter-spacing:0.1em; margin-bottom:1rem;">FIND SIMILAR</div>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <a href="{{ url_for('search', subject=resource.subject) }}" class="btn btn-outline btn-sm" style="justify-content:flex-start;">⌕ More {{ resource.subject[:20] }}</a>
+          <a href="{{ url_for('search', semester=resource.semester, type=resource.resource_type) }}" class="btn btn-outline btn-sm" style="justify-content:flex-start;">⌕ Sem {{ resource.semester }} {{ resource.resource_type }}</a>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const modal = document.getElementById('previewModal');
+
+function openPreview() {
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  showPreviewTab('file');
+}
+
+function closePreview() {
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function showPreviewTab(tab) {
+  const fileTab    = document.getElementById('previewTabFile');
+  const reviewsTab = document.getElementById('previewTabReviews');
+  const btnFile    = document.getElementById('tabBtnFile');
+  const btnReviews = document.getElementById('tabBtnReviews');
+
+  if (tab === 'file') {
+    fileTab.style.display    = 'block';
+    reviewsTab.style.display = 'none';
+    btnFile.style.borderBottomColor    = 'var(--cyan)';
+    btnFile.style.color                = 'var(--cyan)';
+    btnReviews.style.borderBottomColor = 'transparent';
+    btnReviews.style.color             = 'var(--text-mid)';
+  } else {
+    fileTab.style.display    = 'none';
+    reviewsTab.style.display = 'block';
+    btnReviews.style.borderBottomColor = 'var(--cyan)';
+    btnReviews.style.color             = 'var(--cyan)';
+    btnFile.style.borderBottomColor    = 'transparent';
+    btnFile.style.color                = 'var(--text-mid)';
+  }
+}
+
+// Close on backdrop click
+modal.addEventListener('click', function(e) {
+  if (e.target === modal) closePreview();
+});
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePreview();
+});
+</script>
+{% endblock %}

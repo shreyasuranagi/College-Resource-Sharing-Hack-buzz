@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Register — Neural Breach{% endblock %}
+{% block content %}
+<div class="auth-wrapper" style="align-items:flex-start; padding-top:2rem;">
+  <div class="card auth-card fade-up" style="max-width:560px;">
+    <div class="auth-logo">
+      <span class="auth-logo-icon">⬡</span>
+      <div class="auth-logo-text">NEURAL<span>BREACH</span></div>
+      <div class="auth-logo-sub">INITIALIZE NEW ACCOUNT</div>
+    </div>
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">FULL NAME <span class="req">*</span></label>
+          <input type="text" id="name" name="name" placeholder="Your name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">EMAIL ADDRESS <span class="req">*</span></label>
+          <input type="email" id="email" name="email" placeholder="you@college.edu" required autocomplete="email">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="password">PASSWORD <span class="req">*</span></label>
+        <input type="password" id="password" name="password" placeholder="Min 6 characters" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label for="college">COLLEGE / INSTITUTION <span class="req">*</span></label>
+        <input type="text" id="college" name="college" placeholder="e.g. IIT Bombay, BITS Pilani" required>
+        <div class="form-hint">This determines your access to private resources</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="branch">BRANCH / DEPARTMENT <span class="req">*</span></label>
+          <input type="text" id="branch" name="branch" placeholder="e.g. Computer Science" required>
+        </div>
+        <div class="form-group">
+          <label for="semester">CURRENT SEMESTER <span class="req">*</span></label>
+          <select id="semester" name="semester" required>
+            <option value="">Select semester</option>
+            {% for i in range(1, 9) %}
+            <option value="{{ i }}">Semester {{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="bio">BIO <span style="color:var(--text-dim)">(optional)</span></label>
+        <textarea id="bio" name="bio" placeholder="Tell others about yourself..." rows="2"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">⬡ CREATE ACCOUNT</button>
+    </form>
+    <div class="auth-footer">
+      Already have an account? <a href="{{ url_for('login') }}">Access system →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
